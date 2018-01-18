@@ -1,3 +1,73 @@
+commit d4383c541a5a781001b718ad4e01917c63c9f2a4
+Author: Jean-Baptiste Kempf <jb@videolan.org>
+Date:   Mon Jan 8 18:13:51 2018 +0100
+
+    Update NEWS for 1.4.1
+
+commit 439f9615b8fbbd06d06f7bfe9699c8255907a51f
+Author: Jean-Baptiste Kempf <jb@videolan.org>
+Date:   Thu Nov 23 01:53:16 2017 +0100
+
+    Fix key cache storage in ~/.dvdcss
+    
+    See VLC #16347
+
+commit c126d5ac7843a809857a6dc14fbaae29a2499ff0
+Author: Frank Henigman <fjhenigman@gmail.com>
+Date:   Fri Feb 3 11:23:28 2017 -0500
+
+    Fix directory existence check.
+    
+    mkdir() followed by errno==EEXIST is not sufficient to determine if
+    a directory exists.  Do a stat() to check for existence before trying
+    mkdir().
+    
+    Signed-off-by: Frank Henigman <fjhenigman@gmail.com>
+    Signed-off-by: Jean-Baptiste Kempf <jb@videolan.org>
+
+commit 5bec036cfee3950d002f3c46c17bbd4e375d5bd6
+Author: Hannes Domani <ssbssa@yahoo.de>
+Date:   Thu Feb 25 21:03:29 2016 +0100
+
+    Don't close any handle if callback functions are used
+    
+    Signed-off-by: Jean-Baptiste Kempf <jb@videolan.org>
+
+commit 5fd2b38c343a94407863d9fa0820aa251c3d354c
+Author: Petri Hintukainen <phintuka@gmail.com>
+Date:   Sun Mar 13 12:27:02 2016 +0200
+
+    Fix check for empty home dir
+
+commit 100ac1a3762915042ee65b1bf370399966f61be5
+Author: Petri Hintukainen <phintuka@gmail.com>
+Date:   Fri Mar 11 12:07:03 2016 +0200
+
+    Check for empty strings
+
+commit 22cb2d442fecf4dd8122347309dbf27ad79e5559
+Author: Petri Hintukainen <phintuka@gmail.com>
+Date:   Fri Mar 11 12:04:34 2016 +0200
+
+    Improve error reporting when cache directory creation fails
+
+commit 98c66a5b51db1e7a3a056deaafcb9a76d09afbeb
+Author: Petri Hintukainen <phintuka@gmail.com>
+Date:   Fri Mar 11 12:00:05 2016 +0200
+
+    Fix using DVDCSS_CACHE environment variable
+
+commit b0385d98a63dcda3b555b9a4cfd0c70adf70b818
+Author: Lars Kiesow <lkiesow@uos.de>
+Date:   Sat Feb 6 20:09:38 2016 +0100
+
+    Update FSF Addresses
+    
+    The Free Software Foundation address in the COPYING file were outdated.
+    This patch updates this file with the latest state of the GPL v2.
+    
+    Signed-off-by: Jean-Baptiste Kempf <jb@videolan.org>
+
 commit a34ebf642b10e47c80829b923aff120d70184aba
 Author: Jean-Baptiste Kempf <jb@videolan.org>
 Date:   Wed Dec 16 16:01:56 2015 +0100

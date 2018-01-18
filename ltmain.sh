@@ -2,7 +2,7 @@
 ## DO NOT EDIT - This file generated from ./build-aux/ltmain.in
 ##               by inline-source v2014-01-03.01
 
-# libtool (GNU libtool) 2.4.5
+# libtool (GNU libtool) 2.4.6
 # Provide generalized library-building support services.
 # Written by Gordon Matzigkeit <gord@gnu.ai.mit.edu>, 1996
 
@@ -31,8 +31,8 @@
 
 PROGRAM=libtool
 PACKAGE=libtool
-VERSION=2.4.5
-package_revision=2.4.5
+VERSION="2.4.6 Debian-2.4.6-2"
+package_revision=2.4.6
 
 
 ## ------ ##
@@ -64,7 +64,7 @@ package_revision=2.4.5
 # libraries, which are installed to $pkgauxdir.
 
 # Set a version string for this script.
-scriptversion=2014-01-03.01; # UTC
+scriptversion=2015-01-20.17; # UTC
 
 # General shell script boiler plate, and helper functions.
 # Written by Gary V. Vaughan, 2004
@@ -192,7 +192,7 @@ func_path_progs ()
 
     _G_path_prog_max=0
     _G_path_prog_found=false
-    _G_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+    _G_save_IFS=$IFS; IFS=${PATH_SEPARATOR-:}
     for _G_dir in $_G_PATH; do
       IFS=$_G_save_IFS
       test -z "$_G_dir" && _G_dir=.
@@ -1977,7 +1977,7 @@ func_version ()
 # End:
 
 # Set a version string.
-scriptversion='(GNU libtool) 2.4.5'
+scriptversion='(GNU libtool) 2.4.6'
 
 
 # func_echo ARG...
@@ -2039,7 +2039,12 @@ usage_message="Options:
 "
 
 # Additional text appended to 'usage_message' in response to '--help'.
-long_help_message=$long_help_message"
+func_help ()
+{
+    $debug_cmd
+
+    func_usage_message
+    $ECHO "$long_help_message
 
 MODE must be one of the following:
 
@@ -2063,13 +2068,15 @@ include the following information:
        compiler:       $LTCC
        compiler flags: $LTCFLAGS
        linker:         $LD (gnu? $with_gnu_ld)
-       version:        $progname (GNU libtool) 2.4.5
+       version:        $progname $scriptversion Debian-2.4.6-2
        automake:       `($AUTOMAKE --version) 2>/dev/null |$SED 1q`
        autoconf:       `($AUTOCONF --version) 2>/dev/null |$SED 1q`
 
 Report bugs to <bug-libtool@gnu.org>.
-GNU libtool home page: <http://www.gnu.org/software/libtool/>.
+GNU libtool home page: <http://www.gnu.org/s/libtool/>.
 General help using GNU software: <http://www.gnu.org/gethelp/>."
+    exit 0
+}
 
 
 # func_lo2o OBJECT-NAME
@@ -7265,10 +7272,13 @@ func_mode_link ()
       # -tp=*                Portland pgcc target processor selection
       # --sysroot=*          for sysroot support
       # -O*, -g*, -flto*, -fwhopr*, -fuse-linker-plugin GCC link-time optimization
+      # -specs=*             GCC specs files
       # -stdlib=*            select c++ std lib with clang
+      # -fsanitize=*         Clang/GCC memory and address sanitizer
       -64|-mips[0-9]|-r[0-9][0-9]*|-xarch=*|-xtarget=*|+DA*|+DD*|-q*|-m*| \
       -t[45]*|-txscale*|-p|-pg|--coverage|-fprofile-*|-F*|@*|-tp=*|--sysroot=*| \
-      -O*|-g*|-flto*|-fwhopr*|-fuse-linker-plugin|-fstack-protector*|-stdlib=*)
+      -O*|-g*|-flto*|-fwhopr*|-fuse-linker-plugin|-fstack-protector*|-stdlib=*| \
+      -specs=*|-fsanitize=*)
         func_quote_for_eval "$arg"
 	arg=$func_quote_for_eval_result
         func_append compile_command " $arg"
@@ -7561,7 +7571,10 @@ func_mode_link ()
 	case $pass in
 	dlopen) libs=$dlfiles ;;
 	dlpreopen) libs=$dlprefiles ;;
-	link) libs="$deplibs %DEPLIBS% $dependency_libs" ;;
+	link)
+	  libs="$deplibs %DEPLIBS%"
+	  test "X$link_all_deplibs" != Xno && libs="$libs $dependency_libs"
+	  ;;
 	esac
       fi
       if test lib,dlpreopen = "$linkmode,$pass"; then
@@ -7880,19 +7893,19 @@ func_mode_link ()
 	    # It is a libtool convenience library, so add in its objects.
 	    func_append convenience " $ladir/$objdir/$old_library"
 	    func_append old_convenience " $ladir/$objdir/$old_library"
+	    tmp_libs=
+	    for deplib in $dependency_libs; do
+	      deplibs="$deplib $deplibs"
+	      if $opt_preserve_dup_deps; then
+		case "$tmp_libs " in
+		*" $deplib "*) func_append specialdeplibs " $deplib" ;;
+		esac
+	      fi
+	      func_append tmp_libs " $deplib"
+	    done
 	  elif test prog != "$linkmode" && test lib != "$linkmode"; then
 	    func_fatal_error "'$lib' is not a convenience library"
 	  fi
-	  tmp_libs=
-	  for deplib in $dependency_libs; do
-	    deplibs="$deplib $deplibs"
-	    if $opt_preserve_dup_deps; then
-	      case "$tmp_libs " in
-	      *" $deplib "*) func_append specialdeplibs " $deplib" ;;
-	      esac
-	    fi
-	    func_append tmp_libs " $deplib"
-	  done
 	  continue
 	fi # $pass = conv
 
@@ -8815,6 +8828,9 @@ func_mode_link ()
 	    age=$number_minor
 	    revision=$number_minor
 	    lt_irix_increment=no
+	    ;;
+	  *)
+	    func_fatal_configuration "$modename: unknown library version type '$version_type'"
 	    ;;
 	  esac
 	  ;;
