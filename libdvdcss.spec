@@ -1,5 +1,5 @@
 %define name    libdvdcss
-%define version 1.4.1
+%define version 1.4.2
 %define release 1
 
 %define major   2

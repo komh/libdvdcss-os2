@@ -1,3 +1,25 @@
+commit 7b7c185704567398627ad0f9a0d948a63514394b
+Author: Jean-Baptiste Kempf <jb@videolan.org>
+Date:   Sun Mar 18 12:48:18 2018 +0100
+
+    Update NEWS for 1.4.2
+
+commit f88ec35dfd616ca94217658523ca5b8de0a2cb73
+Author: Hugo Beauzée-Luyssen <hugo@beauzee.fr>
+Date:   Thu Mar 1 11:12:10 2018 +0100
+
+    Fix potential free of uninitialized pointer
+    
+    Signed-off-by: Jean-Baptiste Kempf <jb@videolan.org>
+
+commit eab9626405faad756ef83f150505467f20bc931f
+Author: Pierre Lamot <pierre@videolabs.io>
+Date:   Thu Mar 1 10:41:45 2018 +0100
+
+    Fix buffer overflow when region mask is 0x0
+    
+    Signed-off-by: Jean-Baptiste Kempf <jb@videolan.org>
+
 commit d4383c541a5a781001b718ad4e01917c63c9f2a4
 Author: Jean-Baptiste Kempf <jb@videolan.org>
 Date:   Mon Jan 8 18:13:51 2018 +0100
