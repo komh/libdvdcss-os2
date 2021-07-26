@@ -1,3 +1,61 @@
+commit 23d8e2097648708708ef6e413fc892405461549a
+Author: Jean-Baptiste Kempf <jb@videolan.org>
+Date:   Tue Apr 20 17:21:52 2021 +0200
+
+    Update NEWS for 1.4.3
+
+commit 17ec02569acb40c13b8b3329faf027ec62676af0
+Author: Petri Hintukainen <phintuka@gmail.com>
+Date:   Mon Apr 19 17:45:34 2021 +0300
+
+    Fix opening non-ASCII paths in Windows
+
+commit a0a738eb315e7907a457da3035adb645078c8e6d
+Author: Konstantin Pavlov <thresh@videolan.org>
+Date:   Sun Mar 28 00:34:38 2021 +0300
+
+    CI: Build developer documentation
+    
+    while at it, bump debian image
+
+commit e4b84dedccda51e94e774d2d70498b9c86b5593f
+Author: Konstantin Pavlov <thresh@videolan.org>
+Date:   Fri Jan 8 21:59:04 2021 +0300
+
+    CI: Updated to use modern builders
+
+commit eb1f6ed7a012b390e23549778bcc7b54c55869d4
+Author: Chad Dougherty <crd@acm.org>
+Date:   Wed Apr 29 17:44:11 2020 +0200
+
+    update instructions with modern host targets
+
+commit 8398d94d70b4693086649d066dcb7aefe35ce1fa
+Author: Jean-Baptiste Kempf <jb@videolan.org>
+Date:   Sun Oct 13 20:39:07 2019 +0200
+
+    Update NEWS for 1.4.3
+
+commit f93ae872f22bc404aa998ef127242d2e10de1b3c
+Author: astian <astian@elude.in>
+Date:   Sat Mar 24 23:17:00 2018 +0000
+
+    Squelch potential buffer overflow warning
+    
+    GCC 7.3 points out that a buffer of size PATH_MAX is being written to
+    with data that can theoretically overflow (a string of maximum size
+    PATH_MAX plus other constant-size strings).  Fix this by replacing
+    sprintf with snprintf.
+    
+    Signed-off-by: astian <astian@elude.in>
+    Signed-off-by: Jean-Baptiste Kempf <jb@videolan.org>
+
+commit d7f5aaaeee962a991df89ec92c325b1f26559f1e
+Author: Konstantin Pavlov <thresh@videolan.org>
+Date:   Fri Nov 30 18:17:14 2018 +0300
+
+    CI: added debian, macos, win32 and win64 build jobs.
+
 commit 7b7c185704567398627ad0f9a0d948a63514394b
 Author: Jean-Baptiste Kempf <jb@videolan.org>
 Date:   Sun Mar 18 12:48:18 2018 +0100
