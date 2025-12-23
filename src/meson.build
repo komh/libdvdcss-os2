@@ -13,7 +13,7 @@ dvdcss_src = files(
 # Library definitions
 #
 
-if host_machine.system() == 'windows' and get_option('default_library') != 'static'
+if host_machine.system() in ['windows', 'os/2'] and get_option('default_library') != 'static'
     api_export_flags = '-DLIBDVDCSS_EXPORTS'
 else
     api_export_flags = []
