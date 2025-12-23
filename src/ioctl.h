@@ -271,7 +271,7 @@ struct OS2_ExecSCSICmd
     unsigned short  flags;        // flags
     unsigned char   command[16];  // Command Buffer for SCSI command
 
-} OS2_ExecSCSICmd;
+};
 
 #pragma pack()
 
