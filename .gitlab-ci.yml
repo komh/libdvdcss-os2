@@ -1,0 +1,84 @@
+stages:
+    - build
+
+variables:
+    GIT_SUBMODULE_STRATEGY: normal
+
+.build-common:
+    stage: build
+    except:
+        - schedules
+
+.build-docker:
+    extends: .build-common
+    tags:
+        - docker
+        - amd64
+    script:
+        - meson setup build
+        - meson compile -C build
+
+.build-cross:
+    extends: .build-docker
+    script:
+        - meson setup build --cross-file package/crossfiles/${CROSSFILE}.meson
+        - meson compile -C build
+
+build-debian:
+    extends: .build-docker
+    image: registry.videolan.org/dav1d-debian-unstable:20250207200301
+
+build-raspberry:
+    extends: .build-cross
+    image: registry.videolan.org/vlc-ubuntu-raspberry:20250323132008
+    before_script:
+        - python3 -m venv .venv
+        - . .venv/bin/activate
+        - pip install --upgrade pip
+        - pip install meson==1.9.0
+    variables:
+        CROSSFILE: arm-linux-gnueabihf
+
+build-macos-arm64:
+    extends: .build-docker
+    tags:
+        - macos-m1
+    before_script:
+        - python3 -m venv .venv
+        - . .venv/bin/activate
+        - pip install --upgrade pip
+        - pip install meson==1.9.0 ninja==1.13.0
+
+build-macos:
+    extends: .build-docker
+    tags:
+        - amd64
+        - macos
+
+build-win:
+    extends: .build-cross
+    image: registry.videolan.org/dav1d-debian-unstable:20250207200301
+    parallel:
+        matrix:
+            - CROSSFILE: [i686-w64-mingw32, x86_64-w64-mingw32]
+
+build-win-arm:
+    extends: .build-cross
+    image: registry.videolan.org/vlc-debian-llvm-ucrt:20250826105319
+    parallel:
+        matrix:
+            - CROSSFILE: [armv7-w64-mingw32, aarch64-w64-mingw32]
+
+pages:
+    extends: .build-docker
+    image: registry.videolan.org/dav1d-debian-unstable:20250207200301
+    script:
+        - meson setup build -Denable_docs=true
+        - meson compile -C build docs
+        - mv build/doc/html public
+    artifacts:
+        paths:
+            - public
+    only:
+        - schedules
+    except:

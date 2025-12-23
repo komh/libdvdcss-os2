@@ -145,6 +145,9 @@
 
 static int exists_or_mkdir( const char *path, int perm )
 {
+#ifdef HAVE_BROKEN_MKDIR
+    (void) perm;
+#endif
     /* mkdir() may return an error if making the directory would fail,
      * even if the directory exists, so use stat() to test for existence
      * before trying to make the directory. */

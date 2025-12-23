@@ -27,6 +27,7 @@
 #include <limits.h>
 
 #include "dvdcss/dvdcss.h"
+#include "cpxm.h"
 #include "css.h"
 #include "device.h"
 
@@ -68,6 +69,13 @@ struct dvdcss_s
     const char *psz_error;
     int    b_errors;
     int    b_debug;
+
+    /* struct to be used only internally in CPXM */
+    struct cpxm cpxm;
+
+    /* i_copyright read from ioctl_copyright used by cpxm to determine type of encryption */
+    /* 0 - None, 1 - CPPM, 2 - CPRM */
+    int    media_type;
 
 #ifdef _WIN32
     int    b_file;

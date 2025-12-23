@@ -33,7 +33,7 @@
 
 #include <stdint.h>
 
-#include "version.h"
+#include <dvdcss/version.h>
 
 #ifdef __cplusplus
 extern "C" {

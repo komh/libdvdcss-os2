@@ -64,9 +64,6 @@
  *****************************************************************************/
 static void PrintKey        ( dvdcss_t, const char *, const uint8_t * );
 
-static int  GetBusKey       ( dvdcss_t );
-static int  GetASF          ( dvdcss_t );
-
 static void CryptKey        ( int, int, const uint8_t *, uint8_t * );
 static void DecryptKey      ( uint8_t,
                               const uint8_t *, const uint8_t *, uint8_t * );
@@ -79,7 +76,7 @@ static int  RecoverTitleKey ( int, const uint8_t *,
                               const uint8_t *, const uint8_t *, uint8_t * );
 static int  CrackTitleKey   ( dvdcss_t, int, int, dvd_key );
 
-static int  AttackPattern   ( const uint8_t[], uint8_t * );
+static int  AttackPattern   ( const uint8_t p_sec[ DVDCSS_BLOCK_SIZE ], uint8_t * );
 #if 0
 static int  AttackPadding   ( const uint8_t[] );
 #endif
@@ -106,6 +103,9 @@ int dvdcss_test( dvdcss_t dvdcss )
     int i_ret, i_copyright, i_type, i_mask, i_rpc, i_region;
 
     i_ret = ioctl_ReadCopyright( dvdcss->i_fd, 0 /* i_layer */, &i_copyright );
+
+    /* value may be used in cpxm decryption */
+    dvdcss->media_type = i_copyright;
 
     if( i_ret < 0 )
     {
@@ -599,7 +599,7 @@ int dvdcss_unscramble( dvd_key p_key, uint8_t *p_sec )
  * that ASF=1 from the start and then later fail with a 'read of scrambled
  * block without authentication' error.
  *****************************************************************************/
-static int GetBusKey( dvdcss_t dvdcss )
+int GetBusKey( dvdcss_t dvdcss )
 {
     uint8_t   p_buffer[10];
     uint8_t   p_challenge[2 * DVD_KEY_SIZE];
@@ -752,7 +752,7 @@ static void PrintKey( dvdcss_t dvdcss, const char *prefix, const uint8_t *data )
  *  0 if the device needs to be authenticated,
  *  1 either.
  *****************************************************************************/
-static int GetASF( dvdcss_t dvdcss )
+int GetASF( dvdcss_t dvdcss )
 {
     int i_asf = 0;
 

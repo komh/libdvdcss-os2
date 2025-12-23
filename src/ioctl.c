@@ -61,6 +61,10 @@
 #ifdef DVD_STRUCT_IN_LINUX_CDROM_H
 #   include <linux/cdrom.h>
 #endif
+#ifdef HAVE_SCSI_SG_H
+#   include <scsi/sg.h>
+#   include <stdlib.h>
+#endif
 #ifdef DVD_STRUCT_IN_DVD_H
 #   include <dvd.h>
 #endif
@@ -84,6 +88,7 @@
 #endif
 
 #include "dvdcss/dvdcss.h"
+#include "libdvdcpxm.h"
 #include "common.h"
 #include "css.h"
 #include "ioctl.h"
@@ -988,6 +993,197 @@ int ioctl_InvalidateAgid( int i_fd, int *pi_agid )
 
 #endif
     return i_ret;
+}
+
+/*****************************************************************************
+ * ioctl_ReadCPRMMediaID: Reads the unique album identified used for CPRM decryption
+ *****************************************************************************/
+int ioctl_ReadCPRMMediaId(int i_fd,int *p_agid, uint8_t *p_buffer)
+{  
+    int i_ret;
+
+#if defined( HAVE_LINUX_DVD_STRUCT ) && defined( HAVE_SCSI_SG_H )
+    struct sg_io_hdr io_hdr;
+    uint8_t sense[32] = {0};  
+    uint8_t cdb[12] = {0};
+    uint8_t *data_buf = malloc(CPRM_MEDIA_ID_SIZE + 4); 
+
+    if (!data_buf)
+        i_ret = -1;
+
+    memset(&io_hdr, 0, sizeof(io_hdr));
+    memset(data_buf, 0, CPRM_MEDIA_ID_SIZE + 4);
+
+    cdb[0] = GPCMD_READ_DVD_STRUCTURE;
+    cdb[7] = CPRM_STRUCT_MEDIA_ID;
+    cdb[8] = (uint8_t)((CPRM_MEDIA_ID_SIZE + 4) >> 8);
+    cdb[9] = (uint8_t)((CPRM_MEDIA_ID_SIZE + 4) & 0xff);
+    cdb[10] = (*p_agid << 6);
+
+    io_hdr.interface_id = 'S';
+    io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
+    io_hdr.cmd_len = sizeof(cdb);
+    io_hdr.mx_sb_len = sizeof(sense);
+    io_hdr.dxfer_len = CPRM_MEDIA_ID_SIZE + 4;
+    io_hdr.dxferp = data_buf;
+    io_hdr.cmdp = cdb;
+    io_hdr.sbp = sense;
+    io_hdr.timeout = 5000;  
+
+    i_ret = ioctl(i_fd, SG_IO, &io_hdr);
+    if (i_ret < 0 || io_hdr.status) {
+        free(data_buf);
+        i_ret = -1;
+    }
+
+    memcpy(p_buffer, data_buf + 4, CPRM_MEDIA_ID_SIZE);
+    free(data_buf);
+    i_ret = 0;
+
+#elif defined( _WIN32 )
+    DWORD tmp;
+    SCSI_PASS_THROUGH_DIRECT sptd = { 0 };
+    sptd.Length = sizeof( SCSI_PASS_THROUGH_DIRECT );
+    sptd.DataBuffer = p_buffer;
+    sptd.DataTransferLength = CPRM_MEDIA_ID_SIZE + 4 ;
+
+    WinInitSPTD( &sptd, GPCMD_READ_DVD_STRUCTURE );
+
+    sptd.Cdb[7]  = CPRM_STRUCT_MEDIA_ID;
+    sptd.Cdb[10] = *p_agid << 6;
+
+    i_ret = DeviceIoControl( (HANDLE) i_fd, IOCTL_SCSI_PASS_THROUGH_DIRECT,
+                             &sptd, sizeof( sptd ),
+                             &sptd, sizeof( sptd ),
+                             &tmp, NULL ) ? 0 : -1;
+
+    if (i_ret == 0)
+        memmove(p_buffer,
+            p_buffer + 4,
+            CPRM_MEDIA_ID_SIZE);
+
+#elif defined( DARWIN_DVD_IOCTL )
+    int h_dvd;
+    dk_dvd_read_structure_t dvd;
+    uint8_t dvdbs[CPRM_MEDIA_ID_SIZE + 4];
+    dvd.format = CPRM_STRUCT_MEDIA_ID;
+    dvd.buffer = &dvdbs;
+    dvd.bufferLength = sizeof(dvdbs);
+    
+    dvd.grantID = *p_agid;
+
+    i_ret = ioctl( h_dvd, DKIOCDVDREADSTRUCTURE, &dvd );
+    if (i_ret == 0)
+        memcpy(p_buffer, dvd.buffer, sizeof(dvd.bufferLength));
+
+#else
+#   error "DVD ioctls are unavailable on this system"
+
+#endif
+    return i_ret;
+}
+
+
+/*****************************************************************************
+ * ioctl_ReadCPRMMKBPack: Reads Media Key Block pack from the disk for cprm
+ *****************************************************************************/
+int ioctl_ReadCPRMMKBPack(int i_fd, int *p_agid, int mkb_pack, uint8_t *p_mkb_pack, int *p_total_packs)
+{
+    int i_ret;
+
+#if defined( HAVE_LINUX_DVD_STRUCT ) && defined( HAVE_SCSI_SG_H )
+    uint8_t *sptd_buf = malloc( CPRM_MKB_PACK_SIZE + 4 );
+    uint8_t cdb[12] = { 0 };
+    uint8_t sense[32] = { 0 };
+
+    if ( !sptd_buf )
+        i_ret = -1;
+
+    memset( sptd_buf, 0, CPRM_MKB_PACK_SIZE + 4 );
+
+    cdb[0] = GPCMD_READ_DVD_STRUCTURE;
+    cdb[2] = (uint8_t)( ( mkb_pack >> 24 ) & 0xFF );
+    cdb[3] = (uint8_t)( ( mkb_pack >> 16 ) & 0xFF );
+    cdb[4] = (uint8_t)( ( mkb_pack >> 8 )  & 0xFF );
+    cdb[5] = (uint8_t)( mkb_pack & 0xFF );
+    cdb[7] = CPRM_STRUCT_MKB;
+    cdb[8] = ( uint8_t )( ( CPRM_MKB_PACK_SIZE + 4 ) >> 8 );
+    cdb[9] = ( uint8_t )( ( CPRM_MKB_PACK_SIZE + 4 ) & 0xFF );
+    cdb[10] = *p_agid << 6;
+
+    struct sg_io_hdr io_hdr;
+    memset( &io_hdr, 0, sizeof( io_hdr ) );
+
+    io_hdr.interface_id = 'S';
+    io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
+    io_hdr.cmd_len = sizeof( cdb );
+    io_hdr.mx_sb_len = sizeof( sense );
+    io_hdr.dxfer_len = CPRM_MKB_PACK_SIZE + 4;
+    io_hdr.dxferp = sptd_buf;
+    io_hdr.cmdp = cdb;
+    io_hdr.sbp = sense;
+    io_hdr.timeout = 5000;
+
+    i_ret = ioctl( i_fd, SG_IO, &io_hdr );
+    if ( i_ret < 0 || io_hdr.status )
+    {
+        free( sptd_buf );
+        i_ret = -1;
+    }
+
+    *p_total_packs = sptd_buf[3];
+    memcpy( p_mkb_pack, sptd_buf + 4, CPRM_MKB_PACK_SIZE );
+    free( sptd_buf );
+
+#elif defined( DARWIN_DVD_IOCTL )
+    int h_dvd;
+    dk_dvd_read_structure_t dvd;
+    uint8_t dvdbs[CPRM_MKB_PACK_SIZE];
+    dvd.format = CPRM_STRUCT_MKB;
+    dvd.buffer = &dvdbs;
+    dvd.bufferLength = sizeof( dvdbs );
+    
+    dvd.grantID = *p_agid;
+
+    i_ret = ioctl( h_dvd, DKIOCDVDREADSTRUCTURE, &dvd );
+    if ( i_ret == 0 )
+        memcpy( p_mkb_pack, dvd.buffer, sizeof( dvd.bufferLength ) );
+
+#elif defined( _WIN32 )
+    DWORD tmp;
+    SCSI_PASS_THROUGH_DIRECT sptd = { 0 };
+    uint8_t p_buffer[CPRM_MKB_PACK_SIZE + 4];
+    sptd.Length = sizeof( SCSI_PASS_THROUGH_DIRECT );
+    sptd.DataBuffer = p_buffer;
+    sptd.DataTransferLength = CPRM_MKB_PACK_SIZE + 4;
+
+    WinInitSPTD( &sptd, GPCMD_READ_DVD_STRUCTURE );
+
+    sptd.Cdb[2] = (uint8_t)((mkb_pack >> 24) & 0xFF);
+    sptd.Cdb[3] = (uint8_t)((mkb_pack >> 16) & 0xFF);
+    sptd.Cdb[4] = (uint8_t)((mkb_pack >> 8)  & 0xFF);
+    sptd.Cdb[5] = (uint8_t)(mkb_pack & 0xFF);
+    sptd.Cdb[7]  = CPRM_STRUCT_MKB;
+    sptd.Cdb[10] = *p_agid << 6;
+
+    i_ret = DeviceIoControl( (HANDLE) i_fd, IOCTL_SCSI_PASS_THROUGH_DIRECT,
+                             &sptd, sizeof( sptd ),
+                             &sptd, sizeof( sptd ),
+                             &tmp, NULL ) ? 0 : -1;
+
+    if ( i_ret == 0 )
+    {
+        *p_total_packs = p_buffer[3];
+        memcpy( p_mkb_pack, p_buffer + 4, CPRM_MKB_PACK_SIZE );
+    }
+    return i_ret;
+
+#else
+#   error "DVD ioctls are unavailable on this system"
+
+#endif
+    return i_ret;
+
 }
 
 /*****************************************************************************

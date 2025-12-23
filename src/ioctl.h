@@ -37,6 +37,10 @@ int ioctl_SendChallenge     ( int, const int *, const uint8_t * );
 int ioctl_SendKey2          ( int, const int *, const uint8_t * );
 int ioctl_ReportRPC         ( int, int *, int *, int * );
 
+/* Special Ioctl functions for cpxm decryption */
+int ioctl_ReadCPRMMKBPack   ( int, int*, int, uint8_t *, int * );
+int ioctl_ReadCPRMMediaId   ( int, int *, uint8_t * );
+
 #define DVD_DISCKEY_SIZE 2048
 
 /*****************************************************************************

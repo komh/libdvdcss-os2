@@ -1,0 +1,11 @@
+# General options
+
+option('enable_docs',
+  type: 'boolean',
+  value: false,
+  description: 'Build (with Doxygen) and install API documentation')
+
+option('enable_examples',
+    type: 'boolean',
+    value: false,
+    description: 'Build libdvdnav examples')
